@@ -17,11 +17,17 @@ celery = Celery(
 )
 celery.conf.update(app.config)
 
-# Definição da tarefa
+
 @celery.task(bind=True)
-def add_together(self, x, y):
-    time.sleep(5)  # simula tarefa longa
-    return x + y
+def factorial(self, n):
+    time.sleep(1)  # Simula uma demora para ver efeito assíncrono
+    if n < 0:
+        raise ValueError("Número deve ser não-negativo")
+    result = 1
+    for i in range(2, n + 1):
+        result *= i
+        time.sleep(0.1)  # Simula trabalho pesado
+    return result
 
 
 @app.route('/')
@@ -30,21 +36,27 @@ def index():
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Flask + Celery Demo</title>
+  <title>Flask + Celery Factorial Demo</title>
 </head>
 <body>
-  <h1>Flask + Celery Demo</h1>
-  <button onclick="startTask()">Iniciar Tarefa</button>
-  <p id="status">Clique no botão para iniciar a tarefa.</p>
+  <h1>Calcular Fatorial (Assíncrono)</h1>
+  <input type="number" id="number" value="5" min="0" />
+  <button onclick="startTask()">Calcular Fatorial</button>
+  <p id="status">Insira um número e clique no botão.</p>
   <script>
     let taskId = null;
 
     function startTask() {
-      document.getElementById('status').innerText = 'Iniciando tarefa...';
+      const n = parseInt(document.getElementById('number').value);
+      if (isNaN(n) || n < 0) {
+        alert('Digite um número inteiro não-negativo');
+        return;
+      }
+      document.getElementById('status').innerText = 'Iniciando cálculo...';
       fetch('/longtask', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({x: 10})
+        body: JSON.stringify({number: n})
       })
       .then(response => response.json())
       .then(data => {
@@ -63,7 +75,7 @@ def index():
             document.getElementById('status').innerText = 'Status: Pendente...';
             setTimeout(checkStatus, 1000);
           } else if (data.state === 'SUCCESS') {
-            document.getElementById('status').innerText = 'Resultado: ' + data.result;
+            document.getElementById('status').innerText = 'Resultado (Fatorial): ' + data.result;
           } else if (data.state === 'FAILURE') {
             document.getElementById('status').innerText = 'Falha: ' + data.status;
           } else {
@@ -81,16 +93,16 @@ def index():
 @app.route('/longtask', methods=['POST'])
 def longtask():
     data = request.json or {}
-    x = data.get('x', 10)
-    task = add_together.delay(x, x)
+    n = data.get('number', 5)
+    task = factorial.delay(n)
     return jsonify({'task_id': task.id}), 202
 
 
 @app.route('/status/<task_id>')
 def task_status(task_id):
-    task = add_together.AsyncResult(task_id)
+    task = factorial.AsyncResult(task_id)
     if task.state == 'PENDING':
-        response = {'state': task.state, 'status': 'Pending...'}
+        response = {'state': task.state, 'status': 'Pendente...'}
     elif task.state == 'SUCCESS':
         response = {'state': task.state, 'result': task.result}
     elif task.state == 'FAILURE':
@@ -99,6 +111,6 @@ def task_status(task_id):
         response = {'state': task.state, 'status': 'Processando...'}
     return jsonify(response)
 
+
 if __name__ == '__main__':
     app.run(debug=True)
-
