@@ -29,6 +29,51 @@ Este projeto é uma aplicação Flask que realiza simulações Monte Carlo para 
 * Retornar tanto a estimativa da área quanto a proporção de pontos dentro da área esperada.
 * Garantir que o endpoint funcione tanto em single CPU quanto em modo distribuído nos pods.
 
+### Possíveis Entregáveis:
+
+1. Documentação / README:
+
+   * Explicação de como buildar e rodar a aplicação Docker.
+   * Passos para deploy no Kubernetes.
+   * Lista de endpoints disponíveis com exemplos de chamadas.
+   * Explicação da modificação feita (ex: /montecarlo-square/<n>).
+
+2. Código fonte organizado:
+
+   * app.py atualizado com endpoints:
+
+     * /montecarlo/<n> (CPU única)
+     * /montecarlo-distributed/<n> (multi-pod)
+     * /montecarlo-square/<n> (modificação sugerida)
+   * Código limpo, modular e comentado.
+
+3. Testes automatizados:
+
+   * test\_app.py com testes unitários das funções Monte Carlo.
+   * Testes dos endpoints usando Flask test client.
+   * Cobertura mínima garantida (ex.: pytest --cov).
+
+4. Configuração Docker:
+
+   * Dockerfile funcional que permite build e run local.
+   * Porta 8080 corretamente exposta.
+   * Imagem Docker testada localmente (docker run funcionando).
+
+5. Configuração Kubernetes:
+
+   * Manifesto kube-flask-montecarlo.yaml incluindo:
+
+     * Deployment com 3 réplicas (pods).
+     * Service (LoadBalancer ou NodePort) expondo a aplicação.
+   * Verificação de pods (kubectl get pods) e serviço (kubectl get svc) funcionando.
+
+6. Evidências / prints:
+
+   * Terminal mostrando docker ps ou docker logs com container rodando.
+   * Terminal mostrando kubectl get pods com todos os pods prontos.
+   * Chamadas curl ou Postman mostrando retorno correto de todos os endpoints, incluindo /montecarlo-square/<n>.
+
+Enviar via email para luisvinicius.professor@uniatenas.edu.br ou commitar mudanças no repositório forkado.
 
 ---
 
